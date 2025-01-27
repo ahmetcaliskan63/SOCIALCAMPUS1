@@ -3,6 +3,14 @@ const router = express.Router();
 const { v4: uuidv4 } = require('uuid');
 const db = require('../config/database');
 
+// CORS middleware ekle
+router.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  next();
+});
+
 // Kitap ekleme
 router.post('/', async (req, res) => {
   try {
@@ -18,52 +26,70 @@ router.post('/', async (req, res) => {
       satici_bolum
     } = req.body;
 
+    // Zorunlu alanları kontrol et
+    if (!baslik || !kategori || !fiyat || !satici_id) {
+      return res.status(400).json({
+        success: false,
+        message: 'Eksik bilgi gönderildi'
+      });
+    }
+
     const id = uuidv4();
 
-    await db.query(
+    const [result] = await db.query(
       `INSERT INTO kitaplar (
         id, baslik, kategori, fiyat, instagram, resim_url,
-        satici_id, satici_adi, satici_fakulte, satici_bolum
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        satici_id, satici_adi, satici_fakulte, satici_bolum, durum
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         id, baslik, kategori, fiyat, instagram, resim_url,
-        satici_id, satici_adi, satici_fakulte, satici_bolum
+        satici_id, satici_adi, satici_fakulte, satici_bolum, 'müsait'
       ]
     );
 
-    res.status(201).json({
-      success: true,
-      data: {
-        id,
-        baslik,
-        kategori,
-        fiyat,
-        instagram,
-        resim_url,
-        satici_id,
-        satici_adi,
-        satici_fakulte,
-        satici_bolum,
-        durum: 'müsait'
-      }
-    });
+    if (result.affectedRows > 0) {
+      const [newBook] = await db.query('SELECT * FROM kitaplar WHERE id = ?', [id]);
+      
+      res.status(201).json({
+        success: true,
+        data: newBook[0]
+      });
+    } else {
+      throw new Error('Kitap eklenemedi');
+    }
   } catch (error) {
     console.error('Create book error:', error);
-    res.status(500).json({ success: false, message: 'Kitap eklenemedi' });
+    res.status(500).json({ 
+      success: false, 
+      message: 'Kitap eklenemedi',
+      error: error.message 
+    });
   }
 });
 
 // Kitap listesi
 router.get('/', async (req, res) => {
   try {
-    const [books] = await db.query('SELECT * FROM kitaplar');
+    console.log('Kitaplar getirme isteği alındı');
+    
+    // Veritabanı bağlantısını kontrol et
+    await db.query('SELECT 1');
+    
+    const [books] = await db.query('SELECT * FROM kitaplar ORDER BY olusturma_tarihi DESC');
+    console.log(`${books.length} adet kitap bulundu`);
+    
+    res.header('Access-Control-Allow-Origin', '*');
     res.json({
       success: true,
       data: books
     });
   } catch (error) {
     console.error('Get books error:', error);
-    res.status(500).json({ success: false, message: 'Kitaplar getirilemedi' });
+    res.status(500).json({ 
+      success: false, 
+      message: 'Kitaplar getirilemedi',
+      error: error.message 
+    });
   }
 });
 

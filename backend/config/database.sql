@@ -6,11 +6,12 @@ USE klucampus;
 DROP TABLE IF EXISTS trends;
 DROP TABLE IF EXISTS books;
 DROP TABLE IF EXISTS messages;
-DROP TABLE IF EXISTS users;
+DROP TABLE IF EXISTS kullanicilar;
+DROP TABLE IF EXISTS gundem_konulari;
 
 -- Kullanıcılar Tablosu
 CREATE TABLE kullanicilar (
-    id VARCHAR(255) PRIMARY KEY,
+    id VARCHAR(36) PRIMARY KEY,
     tam_ad VARCHAR(255) NOT NULL,
     fakulte VARCHAR(255) NOT NULL,
     fakulte_adi VARCHAR(255) NOT NULL,
@@ -28,6 +29,38 @@ CREATE TABLE mesajlar (
     kullanici_adi VARCHAR(255) NOT NULL,
     icerik TEXT NOT NULL,
     olusturma_tarihi DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (kullanici_id) REFERENCES kullanicilar(id) ON DELETE CASCADE
+);
+
+-- Mesaj Beğeniler Tablosu
+CREATE TABLE mesaj_begeniler (
+    mesaj_id VARCHAR(255) NOT NULL,
+    kullanici_id VARCHAR(255) NOT NULL,
+    olusturma_tarihi DATETIME DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (mesaj_id, kullanici_id),
+    FOREIGN KEY (mesaj_id) REFERENCES mesajlar(id) ON DELETE CASCADE,
+    FOREIGN KEY (kullanici_id) REFERENCES kullanicilar(id) ON DELETE CASCADE
+);
+
+-- Mesaj Yorumları Tablosu
+CREATE TABLE IF NOT EXISTS mesaj_yorumlar (
+    id VARCHAR(255) PRIMARY KEY,
+    mesaj_id VARCHAR(255) NOT NULL,
+    kullanici_id VARCHAR(255) NOT NULL,
+    kullanici_adi VARCHAR(255) NOT NULL,
+    icerik TEXT NOT NULL,
+    olusturma_tarihi DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (mesaj_id) REFERENCES mesajlar(id) ON DELETE CASCADE,
+    FOREIGN KEY (kullanici_id) REFERENCES kullanicilar(id) ON DELETE CASCADE
+);
+
+-- Yorum Beğenileri Tablosu
+CREATE TABLE IF NOT EXISTS mesaj_yorum_begeniler (
+    yorum_id VARCHAR(255) NOT NULL,
+    kullanici_id VARCHAR(255) NOT NULL,
+    olusturma_tarihi DATETIME DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (yorum_id, kullanici_id),
+    FOREIGN KEY (yorum_id) REFERENCES mesaj_yorumlar(id) ON DELETE CASCADE,
     FOREIGN KEY (kullanici_id) REFERENCES kullanicilar(id) ON DELETE CASCADE
 );
 
@@ -51,7 +84,10 @@ CREATE TABLE kitaplar (
 
 -- Gündem Konuları Tablosu
 CREATE TABLE gundem_konulari (
-    id VARCHAR(255) PRIMARY KEY,
-    siralama INT NOT NULL CHECK (siralama > 0),
-    olusturma_tarihi DATETIME DEFAULT CURRENT_TIMESTAMP
+  id VARCHAR(36) PRIMARY KEY DEFAULT (UUID()),
+  baslik VARCHAR(255) NOT NULL,
+  icerik TEXT,
+  siralama INT DEFAULT 0,
+  olusturma_tarihi DATETIME DEFAULT CURRENT_TIMESTAMP,
+  guncelleme_tarihi DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ); 
