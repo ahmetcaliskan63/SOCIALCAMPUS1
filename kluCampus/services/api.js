@@ -1,4 +1,4 @@
-const API_URL = 'http://192.168.14.242:5000/api';
+const API_URL = 'http://192.168.141.242:5000/api';
 
 // Kullanıcı işlemleri
 export const userService = {

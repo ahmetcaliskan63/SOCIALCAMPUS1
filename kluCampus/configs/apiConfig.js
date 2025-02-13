@@ -1,5 +1,5 @@
 // API endpoint'leri için temel URL
-export const API_BASE_URL = 'http://192.168.14.242:5000/api';
+export const API_BASE_URL = 'http://192.168.141.242:5000/api';
 
 // API endpoint'leri
 export const API_ENDPOINTS = {
