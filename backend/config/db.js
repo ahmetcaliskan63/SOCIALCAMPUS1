@@ -3,34 +3,20 @@ const dotenv = require('dotenv');
 
 dotenv.config();
 
-console.log('Database Config:', {
-    host: process.env.DB_HOST,
-    port: process.env.DB_PORT,
-    database: process.env.DB_NAME
+const connection = mysql.createConnection({
+    host: 'yamabiko.proxy.rlwy.net',
+    port: 24760,
+    user: 'root',
+    password: 'XNpcNGoviOKfDNkHdBxpECMpFyMAmOnC',
+    database: 'railway'
 });
 
-const pool = mysql.createPool({
-    host: process.env.DB_HOST || 'yamabiko.proxy.rlwy.net',
-    port: process.env.DB_PORT || 24760,
-    user: process.env.DB_USER || 'root',
-    password: process.env.DB_PASSWORD || 'XNpcNGoviOKfDNkHdBxpECMpFyMAmOnC',
-    database: process.env.DB_NAME || 'railway',
-    waitForConnections: true,
-    connectionLimit: 10,
-    queueLimit: 0
-});
-
-// Test connection
-pool.getConnection((err, connection) => {
+connection.connect((err) => {   
     if (err) {
-        console.error('Database connection failed:', err);
+        console.error('Veritabanı bağlantı hatası:', err);
         return;
     }
-    console.log('Database connected successfully');
-    connection.release();
+    console.log('MySQL veritabanına bağlandı');
 });
 
-// Promise wrapper
-const promisePool = pool.promise();
-
-module.exports = promisePool; 
+module.exports = connection; 
