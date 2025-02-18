@@ -1,66 +1,33 @@
-const API_URL = 'http://192.168.141.242:5000/api';
+const BASE_URL = 'https://socialcampus-production.up.railway.app';
 
 // Kullanıcı işlemleri
 export const userService = {
   createUser: async (userData) => {
     try {
-      // Veriyi backend'in beklediği formata dönüştür
-      const requestData = {
-        tam_ad: userData.tam_ad ? userData.tam_ad.trim() : '',
-        fakulte: userData.faculty,
-        fakulte_adi: userData.faculty || '',
-        bolum: userData.department,
-        sartlari_kabul: userData.termsAccepted ? 1 : 0,
-        sozlesmeyi_kabul: userData.eulaAccepted ? 1 : 0
-      };
-
-      console.log('Gönderilen veri:', requestData);
-      
-      const response = await fetch(`${API_URL}/users/register`, {
+      console.log('İstek gönderiliyor:', userData);
+      const response = await fetch(`${BASE_URL}/kullanicilar`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(requestData),
+        body: JSON.stringify(userData)
       });
 
-      const responseText = await response.text();
-      console.log('API yanıtı:', responseText);
-      
-      try {
-        const data = JSON.parse(responseText);
-        console.log('API yanıtı parse edildi:', data);
-        
-        if (response.ok) {
-          // API yanıtından ID'yi al (nested data içinden de kontrol et)
-          const userId = data.id || data.userId || data.user_id || 
-                        (data.data && (data.data.id || data.data.userId || data.data.user_id));
-          
-          if (!userId) {
-            console.error('API yanıtında ID bulunamadı:', data);
-            return {
-              success: false,
-              message: 'Kullanıcı ID\'si alınamadı'
-            };
-          }
+      console.log('Sunucu yanıtı:', response.status);
 
-          return {
-            success: true,
-            data: {
-              id: userId,
-              ...data.data // Eğer data nested ise onu kullan
-            }
-          };
-        } else {
-          return {
-            success: false,
-            message: data.message || 'Kayıt işlemi başarısız oldu'
-          };
-        }
-      } catch (parseError) {
-        console.error('JSON parse hatası:', parseError);
-        throw new Error('Sunucudan geçersiz yanıt alındı');
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('Sunucu hatası:', errorData);
+        throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
       }
+
+      const data = await response.json();
+      
+      if (!data.success || !data.data) {
+        throw new Error('Kullanıcı oluşturma başarısız');
+      }
+
+      return data.data;  // Kullanıcı bilgilerini döndür
     } catch (error) {
       console.error('Create user error:', error);
       throw error;
@@ -69,7 +36,7 @@ export const userService = {
 
   getUser: async (userId) => {
     try {
-      const response = await fetch(`${API_URL}/users/${userId}`);
+      const response = await fetch(`${BASE_URL}/kullanicilar/${userId}`);
       return await response.json();
     } catch (error) {
       console.error('Get user error:', error);
@@ -82,7 +49,7 @@ export const userService = {
       console.log('userService updateUser çağrıldı:', { userId, userData });
       
       // Mevcut değerleri al
-      const currentResponse = await fetch(`${API_URL}/users/${userId}`);
+      const currentResponse = await fetch(`${BASE_URL}/kullanicilar/${userId}`);
       const currentData = await currentResponse.json();
       
       if (!currentData.success) {
@@ -98,7 +65,7 @@ export const userService = {
 
       console.log('Güncellenecek veriler:', updateData);
 
-      const response = await fetch(`${API_URL}/users/${userId}`, {
+      const response = await fetch(`${BASE_URL}/kullanicilar/${userId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -117,7 +84,7 @@ export const userService = {
 
   getUsersByFaculty: async (faculty) => {
     try {
-      const response = await fetch(`${API_URL}/users/fakulte/${faculty}`);
+      const response = await fetch(`${BASE_URL}/kullanicilar/fakulte/${faculty}`);
       return await response.json();
     } catch (error) {
       console.error('Get users by faculty error:', error);
@@ -130,7 +97,7 @@ export const userService = {
 export const bookService = {
   createBook: async (bookData) => {
     try {
-      const response = await fetch(`${API_URL}/books`, {
+      const response = await fetch(`${BASE_URL}/kitaplar`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -146,7 +113,7 @@ export const bookService = {
 
   getAllBooks: async () => {
     try {
-      const response = await fetch(`${API_URL}/books`);
+      const response = await fetch(`${BASE_URL}/kitaplar`);
       return await response.json();
     } catch (error) {
       console.error('Get all books error:', error);
@@ -156,7 +123,7 @@ export const bookService = {
 
   getBook: async (bookId) => {
     try {
-      const response = await fetch(`${API_URL}/books/${bookId}`);
+      const response = await fetch(`${BASE_URL}/kitaplar/${bookId}`);
       return await response.json();
     } catch (error) {
       console.error('Get book error:', error);
@@ -166,7 +133,7 @@ export const bookService = {
 
   updateBook: async (bookId, bookData) => {
     try {
-      const response = await fetch(`${API_URL}/books/${bookId}`, {
+      const response = await fetch(`${BASE_URL}/kitaplar/${bookId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -182,7 +149,7 @@ export const bookService = {
 
   deleteBook: async (bookId) => {
     try {
-      const response = await fetch(`${API_URL}/books/${bookId}`, {
+      const response = await fetch(`${BASE_URL}/kitaplar/${bookId}`, {
         method: 'DELETE',
       });
       return await response.json();
@@ -194,7 +161,7 @@ export const bookService = {
 
   getBooksByCategory: async (category) => {
     try {
-      const response = await fetch(`${API_URL}/books/kategori/${category}`);
+      const response = await fetch(`${BASE_URL}/kitaplar/kategori/${category}`);
       return await response.json();
     } catch (error) {
       console.error('Get books by category error:', error);
@@ -204,7 +171,7 @@ export const bookService = {
 
   getBooksByFaculty: async (faculty) => {
     try {
-      const response = await fetch(`${API_URL}/books/fakulte/${faculty}`);
+      const response = await fetch(`${BASE_URL}/kitaplar/fakulte/${faculty}`);
       return await response.json();
     } catch (error) {
       console.error('Get books by faculty error:', error);
@@ -217,7 +184,7 @@ export const bookService = {
 export const messageService = {
   createMessage: async (messageData) => {
     try {
-      const response = await fetch(`${API_URL}/messages`, {
+      const response = await fetch(`${BASE_URL}/mesajlar`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -233,7 +200,7 @@ export const messageService = {
 
   getAllMessages: async () => {
     try {
-      const response = await fetch(`${API_URL}/messages`);
+      const response = await fetch(`${BASE_URL}/mesajlar`);
       return await response.json();
     } catch (error) {
       console.error('Get all messages error:', error);
@@ -243,7 +210,7 @@ export const messageService = {
 
   getUserMessages: async (userId) => {
     try {
-      const response = await fetch(`${API_URL}/messages/kullanici/${userId}`);
+      const response = await fetch(`${BASE_URL}/mesajlar/kullanici/${userId}`);
       return await response.json();
     } catch (error) {
       console.error('Get user messages error:', error);
@@ -253,7 +220,7 @@ export const messageService = {
 
   deleteMessage: async (messageId) => {
     try {
-      const response = await fetch(`${API_URL}/messages/${messageId}`, {
+      const response = await fetch(`${BASE_URL}/mesajlar/${messageId}`, {
         method: 'DELETE',
       });
       return await response.json();

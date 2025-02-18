@@ -1,4 +1,4 @@
-const BASE_URL = 'http://socialcampus-production.up.railway.app';
+const BASE_URL = 'https://socialcampus-production.up.railway.app';
 
 export const createUser = async (userData) => {
     try {

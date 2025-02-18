@@ -10,15 +10,15 @@ DROP TABLE IF EXISTS kullanicilar;
 DROP TABLE IF EXISTS gundem_konulari;
 
 -- Kullanıcılar Tablosu
-CREATE TABLE kullanicilar (
-    id VARCHAR(36) PRIMARY KEY,
+CREATE TABLE IF NOT EXISTS kullanicilar (
+    id INT PRIMARY KEY AUTO_INCREMENT,
     tam_ad VARCHAR(255) NOT NULL,
     fakulte VARCHAR(255) NOT NULL,
     fakulte_adi VARCHAR(255) NOT NULL,
     bolum VARCHAR(255) NOT NULL,
-    sartlari_kabul BOOLEAN NOT NULL DEFAULT FALSE,
-    sozlesmeyi_kabul BOOLEAN NOT NULL DEFAULT FALSE,
-    olusturma_tarihi DATETIME DEFAULT CURRENT_TIMESTAMP,
+    sartlari_kabul TINYINT(1) DEFAULT 0,
+    sozlesmeyi_kabul TINYINT(1) DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     guncelleme_tarihi DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
