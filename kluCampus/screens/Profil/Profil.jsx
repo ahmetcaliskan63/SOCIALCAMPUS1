@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { 
-    View, 
-    Text, 
-    Dimensions, 
-    StyleSheet, 
-    Linking, 
-    Image, 
-    TextInput, 
-    TouchableOpacity, 
-    ScrollView, 
+import {
+    View,
+    Text,
+    Dimensions,
+    StyleSheet,
+    Linking,
+    Image,
+    TextInput,
+    TouchableOpacity,
+    ScrollView,
     Alert,
     ActivityIndicator,
     Modal,
@@ -44,8 +44,8 @@ const AboutAppModal = ({ visible, onClose }) => (
             <Ionicons name="close-circle" size={35} color="#4ECDC4" />
           </TouchableOpacity>
         </View>
-        
-        <ScrollView 
+
+        <ScrollView
           style={styles.modalScrollView}
           showsVerticalScrollIndicator={false}
         >
@@ -54,19 +54,19 @@ const AboutAppModal = ({ visible, onClose }) => (
             style={styles.welcomeSection}
           >
             <Text style={styles.aboutModalSubtitle}>SocialCampus'e Hoş Geldiniz</Text>
-            
+
             <Text style={styles.aboutModalText}>
-              SocialCampus, Kırklareli Üniversitesi öğrencilerinin kampüs deneyimini zenginleştirmek ve günlük yaşamlarını 
-              kolaylaştırmak amacıyla özel olarak tasarlanmış yenilikçi bir mobil platformdur. Modern arayüzü ve kullanıcı 
-              dostu özellikleriyle, öğrencilerin akademik ve sosyal hayatlarını daha verimli bir şekilde yönetmelerine 
+              SocialCampus, Kırklareli Üniversitesi öğrencilerinin kampüs deneyimini zenginleştirmek ve günlük yaşamlarını
+              kolaylaştırmak amacıyla özel olarak tasarlanmış yenilikçi bir mobil platformdur. Modern arayüzü ve kullanıcı
+              dostu özellikleriyle, öğrencilerin akademik ve sosyal hayatlarını daha verimli bir şekilde yönetmelerine
               olanak sağlar.
             </Text>
           </LinearGradient>
-          
+
           <View style={styles.developerSection}>
             <Text style={styles.aboutModalText}>
-              Bu platform, Kırklareli Üniversitesi Yazılım Mühendisliği bölümü öğrencisi tarafından, öğrenci topluluğunun 
-              ihtiyaçları göz önünde bulundurularak geliştirilmiştir. Amacımız, teknoloji ile öğrenci deneyimini 
+              Bu platform, Kırklareli Üniversitesi Yazılım Mühendisliği bölümü öğrencisi tarafından, öğrenci topluluğunun
+              ihtiyaçları göz önünde bulundurularak geliştirilmiştir. Amacımız, teknoloji ile öğrenci deneyimini
               iyileştirerek, kampüs yaşamını daha etkileşimli ve erişilebilir hale getirmektir.
             </Text>
           </View>
@@ -74,36 +74,36 @@ const AboutAppModal = ({ visible, onClose }) => (
           <Text style={styles.featuresTitle}>
             <Ionicons name="star" size={24} color="#4ECDC4" /> Temel Özellikler
           </Text>
-          
+
           <View style={styles.featuresContainer}>
             <FeatureCard
               title="Yemekhane Bilgi Sistemi"
               icon="restaurant-outline"
-              description="Günlük yemek menülerini anlık olarak görüntüleyebilir, haftalık menüleri inceleyebilir ve 
+              description="Günlük yemek menülerini anlık olarak görüntüleyebilir, haftalık menüleri inceleyebilir ve
               beslenme planlamanızı buna göre yapabilirsiniz."
             />
 
             <FeatureCard
               title="Öğrenci Kulüpleri Portalı"
               icon="people-outline"
-              description="Üniversitemizdeki tüm öğrenci kulüplerinin detaylı bilgilerine, 
+              description="Üniversitemizdeki tüm öğrenci kulüplerinin detaylı bilgilerine,
               yönetim kadrosuna ve iletişim bilgilerine tek bir platformdan erişebilirsiniz."
             />
 
             <FeatureCard
               title="Kampüs Sosyal Ağı"
               icon="chatbubbles-outline"
-              description="Kampüs içi etkinlikleri, duyuruları ve güncel haberleri takip edebilir, diğer öğrencilerle 
-              etkileşime geçebilirsiniz. Sosyal ağımız, öğrenci topluluğunu bir araya getirerek bilgi paylaşımını ve 
+              description="Kampüs içi etkinlikleri, duyuruları ve güncel haberleri takip edebilir, diğer öğrencilerle
+              etkileşime geçebilirsiniz. Sosyal ağımız, öğrenci topluluğunu bir araya getirerek bilgi paylaşımını ve
               iletişimi güçlendirir."
             />
 
             <FeatureCard
               title="Öğrenci Alışveriş Platformu"
               icon="cart-outline"
-              description="Kampüs içi alışveriş deneyimini kolaylaştıran bu platformda, diğer öğrencilerin paylaştığı 
-              ders kitapları, kırtasiye malzemeleri ve çeşitli ürünlere göz atabilirsiniz. İlgilendiğiniz ürünün 
-              satıcısıyla Instagram üzerinden doğrudan iletişime geçebilir, detayları görüşebilirsiniz. Ayrıca kendi 
+              description="Kampüs içi alışveriş deneyimini kolaylaştıran bu platformda, diğer öğrencilerin paylaştığı
+              ders kitapları, kırtasiye malzemeleri ve çeşitli ürünlere göz atabilirsiniz. İlgilendiğiniz ürünün
+              satıcısıyla Instagram üzerinden doğrudan iletişime geçebilir, detayları görüşebilirsiniz. Ayrıca kendi
               ürünlerinizi de platforma ekleyerek diğer öğrencilerle güvenli bir şekilde alışveriş yapabilirsiniz."
             />
           </View>
@@ -161,52 +161,33 @@ export default function Profil() {
     const [showChatbotModal, setShowChatbotModal] = useState(false);
 
     useEffect(() => {
-        fetchUserData();
+        getUserData();
     }, []);
 
-    const fetchUserData = async () => {
+    const getUserData = async () => {
         try {
-            // Kullanıcı ID'sini al
-            const userDataStr = await AsyncStorage.getItem('userData');
-            console.log('AsyncStorage userData:', userDataStr);
-            
-            if (!userDataStr) {
-                console.log('Kullanıcı verisi bulunamadı');
-                return;
+            const storedUserData = await AsyncStorage.getItem('userData');
+            if (!storedUserData) {
+                throw new Error('Kullanıcı bilgileri bulunamadı');
             }
 
-            const userData = JSON.parse(userDataStr);
-            console.log('Parsed userData:', userData);
-            
-            if (!userData.id) {
-                console.log('Kullanıcı ID bulunamadı');
-                return;
-            }
+            const userData = JSON.parse(storedUserData);
+            console.log('Kullanıcı verisi yüklendi:', userData);
 
-            // userService'i kullan
-            const result = await userService.getUser(userData.id);
-            console.log('API yanıtı:', result);
-            
-            if (result.success && result.data) {
-                // State'i güncelle
-                setUserInfo({
-                    isimSoyisim: result.data.tam_ad || "Belirtilmemiş",
-                    fakulte: result.data.fakulte || "Belirtilmemiş",
-                    bolum: result.data.bolum || "Belirtilmemiş"
-                });
-                
-                console.log('UserInfo güncellendi:', {
-                    isimSoyisim: result.data.tam_ad,
-                    fakulte: result.data.fakulte,
-                    bolum: result.data.bolum
-                });
-            } else {
-                console.log('API başarılı yanıt vermedi:', result);
-                throw new Error('API yanıtı başarısız');
-            }
+            // Kullanıcı bilgilerini göster
+            setUserInfo({
+                isimSoyisim: userData.tam_ad || "Belirtilmemiş",
+                fakulte: userData.fakulte || "Belirtilmemiş",
+                bolum: userData.bolum || "Belirtilmemiş"
+            });
+
         } catch (error) {
             console.error('Kullanıcı bilgileri alınırken hata:', error);
-            Alert.alert('Hata', 'Kullanıcı bilgileri alınamadı. Lütfen tekrar deneyin.');
+            setUserInfo({
+                isimSoyisim: "Belirtilmemiş",
+                fakulte: "Belirtilmemiş",
+                bolum: "Belirtilmemiş"
+            });
         } finally {
             setLoading(false);
         }
@@ -223,7 +204,7 @@ export default function Profil() {
 
     const updateUserData = async () => {
         if (isSubmitting) return;
-        
+
         if (!isFormValid()) {
             Alert.alert('Uyarı', 'En az bir alanda değişiklik yapmalısınız.');
             return;
@@ -239,18 +220,18 @@ export default function Profil() {
             }
 
             const userData = JSON.parse(userDataStr);
-            
+
             // Sadece değiştirilmiş alanları güncelle
             const updateData = {};
-            
+
             if (editedInfo.fullName.trim() !== '') {
                 updateData.tam_ad = editedInfo.fullName.trim();
             }
-            
+
             if (editedInfo.faculty.trim() !== '') {
                 updateData.fakulte = editedInfo.faculty.trim();
             }
-            
+
             if (editedInfo.department.trim() !== '') {
                 updateData.bolum = editedInfo.department.trim();
             }
@@ -263,7 +244,7 @@ export default function Profil() {
             // userService'e sadece updateData'yı gönder
             const result = await userService.updateUser(userData.id, updateData);
             console.log('API Yanıtı:', result);
-            
+
             if (result.success) {
                 // AsyncStorage'daki kullanıcı bilgilerini güncelle
                 const updatedUserData = {
@@ -283,7 +264,7 @@ export default function Profil() {
 
                 Alert.alert('Başarılı', 'Profil bilgileriniz güncellendi.');
                 setModalVisible(false);
-                
+
                 // Form verilerini temizle
                 setEditedInfo({
                     fullName: "",
@@ -334,14 +315,14 @@ export default function Profil() {
                     <Ionicons name="logo-android" size={32} color="#1a1a1a" />
                   </LinearGradient>
                   <Text style={styles.chatbotModalTitle}>AI Asistan</Text>
-                  
+
                 </View>
                 <TouchableOpacity onPress={() => setShowChatbotModal(false)} style={styles.modalCloseButton}>
                   <Ionicons name="close-circle" size={35} color="#4ECDC4" />
               </TouchableOpacity>
             </View>
 
-              <ScrollView 
+              <ScrollView
                 style={styles.chatbotScrollView}
                 showsVerticalScrollIndicator={false}
               >
@@ -353,7 +334,7 @@ export default function Profil() {
                 >
                   <Text style={{color:"white"}}>Yapay Zeka Destekli Asistanınız</Text>
                   <Text style={{color:"white"}}>
-                    SOCİALCAMPUS AI Asistan, üniversite yaşamınızı kolaylaştırmak için tasarlanmış akıllı bir yardımcıdır. 
+                    SOCİALCAMPUS AI Asistan, üniversite yaşamınızı kolaylaştırmak için tasarlanmış akıllı bir yardımcıdır.
                     Anlık sorularınıza hızlı ve doğru yanıtlar sunar, kampüs hayatınızı daha verimli hale getirir.
               </Text>
                 </LinearGradient>
@@ -457,39 +438,42 @@ export default function Profil() {
                 </View>
 
                 <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-                    <View style={styles.infoContainer}>
-                        <InfoItem
-                            icon="person-outline"
-                            title="İsim Soyisim"
-                            value={userInfo.isimSoyisim}
-                        />
-                        <InfoItem
-                            icon="school-outline"
-                            title="Fakülte"
-                            value={userInfo.fakulte}
-                        />
-                        <InfoItem
-                            icon="book-outline"
-                            title="Bölüm"
-                            value={userInfo.bolum}
-                        />
+                  {
+<View style={styles.infoContainer}>
+    <InfoItem
+        icon="person-outline"
+        title="İsim Soyisim"
+        value={userInfo.isimSoyisim}
+    />
+    <InfoItem
+        icon="school-outline"
+        title="Fakülte"
+        value={userInfo.fakulte}
+    />
+    <InfoItem
+        icon="book-outline"
+        title="Bölüm"
+        value={userInfo.bolum}
+    />
 
-                        <TouchableOpacity style={styles.editButton} onPress={() => setModalVisible(true)}>
-                            <Ionicons name="pencil" size={20} color="#4ECDC4" />
-                            <Text style={styles.editButtonText}>Düzenle</Text>
-                        </TouchableOpacity>
-                    </View>
+    {/* <TouchableOpacity style={styles.editButton} onPress={() => setModalVisible(true)}>
+        <Ionicons name="pencil" size={20} color="#4ECDC4" />
+        <Text style={styles.editButtonText}>Düzenle</Text>
+    </TouchableOpacity> */}
+</View>
+}
+
 
                     <View style={styles.buttonContainer}>
-                        <TouchableOpacity 
-                            style={styles.actionButton} 
+                        <TouchableOpacity
+                            style={styles.actionButton}
                             onPress={() => Linking.openURL('https://www.linkedin.com/in/batuhanslkmm/')}
                         >
                             <Ionicons name="logo-linkedin" size={24} color="#4ECDC4" />
                             <Text style={styles.actionButtonText}>İletişime Geç</Text>
                         </TouchableOpacity>
 
-                        <TouchableOpacity 
+                        <TouchableOpacity
                             style={styles.actionButton}
                             onPress={() => setAboutAppModalVisible(true)}
                         >
@@ -502,8 +486,8 @@ export default function Profil() {
                         <Text style={styles.longButtonText}>Uygulamaya Eklenecekler</Text>
                     </TouchableOpacity>
 
-                    <TouchableOpacity 
-                        style={[styles.chatbotButton]} 
+                    <TouchableOpacity
+                        style={[styles.chatbotButton]}
                         onPress={() => setShowChatbotModal(true)}
                     >
                         <LinearGradient
@@ -530,8 +514,8 @@ export default function Profil() {
                         >
                             <View style={styles.modalHeader}>
                                 <Text style={styles.modalTitle}>Profili Düzenle</Text>
-                                <TouchableOpacity 
-                                    style={styles.modalCloseButton} 
+                                <TouchableOpacity
+                                    style={styles.modalCloseButton}
                                     onPress={() => setModalVisible(false)}
                                 >
                                     <Ionicons name="close-circle" size={32} color="#4ECDC4" />
@@ -573,8 +557,8 @@ export default function Profil() {
                                 </View>
                             </View>
 
-                            <TouchableOpacity 
-                                style={[styles.modalSaveButton, !isFormValid() && styles.modalSaveButtonDisabled]} 
+                            <TouchableOpacity
+                                style={[styles.modalSaveButton, !isFormValid() && styles.modalSaveButtonDisabled]}
                                 onPress={updateUserData}
                                 disabled={!isFormValid() || isSubmitting}
                             >
@@ -594,9 +578,9 @@ export default function Profil() {
 
             <AboutScreen modalVisible={aboutModalVisible} setModalVisible={setAboutModalVisible} />
             <AppAdd modalVisible={addModalVisible} setModalVisible={setAddModalVisible} />
-            <AboutAppModal 
-                visible={aboutAppModalVisible} 
-                onClose={() => setAboutAppModalVisible(false)} 
+            <AboutAppModal
+                visible={aboutAppModalVisible}
+                onClose={() => setAboutAppModalVisible(false)}
             />
             {renderChatbotModal()}
         </SafeAreaView>

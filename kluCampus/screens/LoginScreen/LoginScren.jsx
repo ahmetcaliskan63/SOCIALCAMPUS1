@@ -91,66 +91,67 @@ export default function LoginScreen({ onLogin }) {
     const handleRegister = async () => {
         if (!isFormValid || isSubmitted) return;
 
-        // Form verilerini kontrol et
-        console.log('Kayıt başlıyor, form verileri:', formData);
-
-        const { tam_ad, faculty, department, termsAccepted, eulaAccepted } = formData;
-
-        // Validation
-        if (!tam_ad || tam_ad.trim().length < 5) {
-            Alert.alert('Uyarı', 'Ad Soyad en az 5 karakter olmalıdır');
-            return;
-        }
-
-        if (!tam_ad.includes(' ')) {
-            Alert.alert('Uyarı', 'Lütfen hem adınızı hem soyadınızı girin');
-            return;
-        }
-
         try {
             setLoading(true);
             setIsSubmitted(true);
 
             const requestData = {
-                tam_ad,
-                faculty,
-                department,
-                termsAccepted,
-                eulaAccepted
+                tam_ad: formData.tam_ad,
+                faculty: formData.faculty,
+                department: formData.department,
+                termsAccepted: formData.termsAccepted,
+                eulaAccepted: formData.eulaAccepted
             };
 
-            console.log('API isteği hazırlandı:', requestData);
+            console.log('Gönderilen veri:', requestData);
 
             const response = await userService.createUser(requestData);
+            console.log('API yanıtı:', response);
             
-            if (response.success) {
-                // Kullanıcı verilerini AsyncStorage'a kaydet
+            // Başarılı yanıt kontrolü
+            if (response && response.id) {
                 const userData = {
-                    id: response.data.id || response.data.userId,
-                    tam_ad: tam_ad,
-                    fakulte: faculty,
-                    bolum: department
+                    id: response.id.toString(),
+                    tam_ad: response.tam_ad,
+                    fakulte: response.fakulte,
+                    bolum: response.bolum
                 };
                 
-                console.log('Kaydedilecek kullanıcı verileri:', userData);
-                
                 try {
-                    await AsyncStorage.setItem('userData', JSON.stringify(userData));
-                    console.log('Kullanıcı verileri kaydedildi:', userData);
-                } catch (storageError) {
-                    console.error('AsyncStorage kayıt hatası:', storageError);
-                }
+                    // AsyncStorage işlemleri
+                    await Promise.all([
+                        AsyncStorage.setItem('userData', JSON.stringify(userData)),
+                        AsyncStorage.setItem('userLoggedIn', 'true')
+                    ]);
 
-                Alert.alert('Başarılı', 'Kayıt işlemi başarıyla tamamlandı');
-                if (onLogin) onLogin();
+                    // Yönlendirme işlemi
+                    if (onLogin) {
+                        onLogin();
+                    }
+
+                    // Başarı mesajı
+                    setTimeout(() => {
+                        Alert.alert(
+                            'Başarılı',
+                            'Kaydınız başarıyla tamamlandı!'
+                        );
+                    }, 100);
+
+                } catch (storageError) {
+                    console.error('Storage hatası:', storageError);
+                    Alert.alert('Hata', 'Kullanıcı bilgileri kaydedilirken bir hata oluştu.');
+                    setIsSubmitted(false);
+                }
             } else {
-                setIsSubmitted(false);
-                Alert.alert('Hata', response.message || 'Bir hata oluştu');
+                throw new Error('Geçersiz sunucu yanıtı');
             }
         } catch (error) {
             console.error('Kayıt hatası:', error);
             setIsSubmitted(false);
-            Alert.alert('Hata', error.message);
+            Alert.alert(
+                'Hata',
+                error.message || 'Kayıt işlemi sırasında bir hata oluştu. Lütfen tekrar deneyin.'
+            );
         } finally {
             setLoading(false);
         }

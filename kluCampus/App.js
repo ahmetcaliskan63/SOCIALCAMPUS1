@@ -46,14 +46,21 @@ export default function App() {
   };
 
   const handleLogin = async () => {
+    console.log("handleLogin çağrıldı - başlangıç");
     try {
-      setIsLoggedIn(true);
-      console.log("Kullanıcı başarıyla giriş yaptı");
+      // Önce state'i güncelle
+      await new Promise((resolve) => {
+        setIsLoggedIn(true);
+        resolve();
+      });
+
+      console.log("Login durumu güncellendi - isLoggedIn:", true);
     } catch (error) {
       console.error("Login hatası:", error);
-      Alert.alert("Hata", "Giriş yapılırken bir hata oluştu");
       setIsLoggedIn(false);
+      Alert.alert("Hata", "Giriş yapılırken bir hata oluştu");
     }
+    console.log("handleLogin tamamlandı");
   };
 
   const clearOldCache = async () => {
