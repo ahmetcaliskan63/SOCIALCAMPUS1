@@ -1,28 +1,31 @@
-const mysql = require('mysql2');
-const dotenv = require('dotenv');
+const mysql = require("mysql2/promise");
+const dotenv = require("dotenv");
 
 dotenv.config();
 
-const connection = mysql.createPool({
-    host: 'yamabiko.proxy.rlwy.net',
-    port: 24760,
-    user: 'root',
-    password: 'XNpcNGoviOKfDNkHdBxpECMpFyMAmOnC',
-    database: 'railway',
-    waitForConnections: true,
-    connectionLimit: 10,
-    queueLimit: 0,
-    connectTimeout: 60000 // 60 saniye
+const pool = mysql.createPool({
+  host: "yamabiko.proxy.rlwy.net",
+  port: 24760,
+  user: "root",
+  password: "XNpcNGoviOKfDNkHdBxpECMpFyMAmOnC",
+  database: "railway",
+  waitForConnections: true,
+  connectionLimit: 10,
+  queueLimit: 0,
+  enableKeepAlive: true,
+  keepAliveInitialDelay: 0,
 });
 
-// Test bağlantısı
-connection.getConnection((err, conn) => {
-    if (err) {
-        console.error('Veritabanı bağlantı hatası:', err);
-        return;
-    }
-    console.log('MySQL veritabanına bağlandı');
-    conn.release();
-});
+// Bağlantıyı test et
+pool
+  .getConnection()
+  .then((connection) => {
+    console.log("Database bağlantısı başarılı");
+    connection.release();
+  })
+  .catch((err) => {
+    console.error("Database bağlantı hatası:", err);
+    process.exit(1); // Bağlantı başarısız ise uygulamayı durdur
+  });
 
-module.exports = connection.promise(); 
+module.exports = pool;

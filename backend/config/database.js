@@ -1,7 +1,7 @@
-const mysql = require('mysql2/promise');
-const dotenv = require('dotenv');
-const fs = require('fs');
-const path = require('path');
+const mysql = require("mysql2/promise");
+const dotenv = require("dotenv");
+const fs = require("fs");
+const path = require("path");
 
 dotenv.config();
 
@@ -12,23 +12,23 @@ const pool = mysql.createPool({
   database: process.env.DB_NAME,
   waitForConnections: true,
   connectionLimit: 10,
-  queueLimit: 0
+  queueLimit: 0,
 });
 
 // Veritabanı ve tablo oluşturma
 const initDatabase = async () => {
   try {
     // Veritabanı bağlantısını test et
-    await pool.query('SELECT 1');
-    console.log('Veritabanı bağlantısı başarılı');
+    await pool.query("SELECT 1");
+    console.log("Veritabanı bağlantısı başarılı");
 
     // Schema dosyasını oku ve çalıştır
-    const schemaPath = path.join(__dirname, 'schema.sql');
-    const schema = fs.readFileSync(schemaPath, 'utf8');
+    const schemaPath = path.join(__dirname, "schema.sql");
+    const schema = fs.readFileSync(schemaPath, "utf8");
     await pool.query(schema);
-    console.log('Veritabanı şeması başarıyla oluşturuldu');
+    console.log("Veritabanı şeması başarıyla oluşturuldu");
   } catch (error) {
-    console.error('Veritabanı başlatma hatası:', error);
+    console.error("Veritabanı başlatma hatası:", error);
     process.exit(1);
   }
 };
@@ -36,4 +36,4 @@ const initDatabase = async () => {
 // Veritabanını başlat
 initDatabase();
 
-module.exports = pool; 
+module.exports = pool;

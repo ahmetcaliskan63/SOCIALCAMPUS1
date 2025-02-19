@@ -49,23 +49,43 @@ export default function BookSellingPage() {
   const fetchBooks = async () => {
     try {
       setLoading(true);
-
-      // Her zaman API'den güncel verileri al
       const result = await bookService.getAllBooks();
       
-      if (result.success) {
-        // Verileri cache'e kaydet
-        await AsyncStorage.setItem('booksCache', JSON.stringify(result.data));
-        await AsyncStorage.setItem('books_cache_timestamp', Date.now().toString());
+      // API yanıtını kontrol et
+      if (result && result.success) {
+        setBooks(result.data || []);
+        setFilteredBooks(result.data || []);
         
-        setBooks(result.data);
-        setFilteredBooks(result.data);
+        // Cache'e kaydet
+        try {
+          await AsyncStorage.setItem('booksCache', JSON.stringify(result.data || []));
+          await AsyncStorage.setItem('books_cache_timestamp', Date.now().toString());
+        } catch (cacheError) {
+          console.log('Cache kaydetme hatası:', cacheError);
+        }
       } else {
-        throw new Error(result.message || 'Veriler alınamadı');
+        setBooks([]);
+        setFilteredBooks([]);
       }
     } catch (error) {
       console.error('Ürünler yüklenirken hata:', error);
-      Alert.alert('Hata', 'Veriler alınamadı.');
+      
+      // Hata durumunda cache'den veri almayı dene
+      try {
+        const cachedData = await AsyncStorage.getItem('booksCache');
+        if (cachedData) {
+          const parsedData = JSON.parse(cachedData);
+          setBooks(parsedData);
+          setFilteredBooks(parsedData);
+        } else {
+          setBooks([]);
+          setFilteredBooks([]);
+        }
+      } catch (cacheError) {
+        console.error('Cache okuma hatası:', cacheError);
+        setBooks([]);
+        setFilteredBooks([]);
+      }
     } finally {
       setLoading(false);
     }

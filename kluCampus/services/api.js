@@ -1,47 +1,80 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-// API URL'ini güncelleyin - backend URL'inizi buraya yazın
-const BASE_URL = "https://socialcampus-production.up.railway.app/api"; // /api ekledik
-
-// Ortak headers
-const headers = {
-  "Content-Type": "application/json",
-  Accept: "application/json",
-};
+const BASE_URL = "https://socialcampus-production.up.railway.app";
+// const BASE_URL = "http://localhost:3000"; // Geliştirme için
 
 // Kullanıcı işlemleri
 export const userService = {
   createUser: async (userData) => {
     try {
-      const response = await fetch(`${BASE_URL}/users/register`, {
-        // endpoint'i değiştirdik
+      const response = await fetch(`${BASE_URL}/kullanicilar`, {
         method: "POST",
-        headers,
+        headers: {
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify(userData),
       });
 
-      if (!response.ok) {
-        throw new Error(`Sunucu hatası: ${response.status}`);
-      }
+      const text = await response.text();
+      console.log("API Raw Response:", text);
 
-      const data = await response.json();
-      return data;
+      try {
+        return JSON.parse(text);
+      } catch (parseError) {
+        if (response.ok) {
+          return { success: true, data: userData };
+        } else {
+          throw new Error("Sunucu yanıtı geçersiz");
+        }
+      }
     } catch (error) {
-      console.error("Kullanıcı oluşturma hatası:", error);
+      console.error("Create user error:", error);
       throw error;
     }
   },
 
   getUser: async (userId) => {
     try {
+      if (!userId) {
+        throw new Error("Kullanıcı ID gerekli");
+      }
+
+      // Önce localStorage'dan veriyi al
       const storedData = await AsyncStorage.getItem("userData");
       if (!storedData) {
         throw new Error("Kullanıcı verisi bulunamadı");
       }
 
-      return JSON.parse(storedData);
+      const userData = JSON.parse(storedData);
+      console.log("Mevcut localStorage verisi:", userData);
+
+      // API'den veri almayı dene
+      try {
+        const response = await fetch(`${BASE_URL}/kullanici/${userId}`);
+        if (response.ok) {
+          const apiData = await response.json();
+          console.log("API'den gelen veri:", apiData);
+
+          // API verisi başarılı ise güncelle ve kaydet
+          const updatedData = {
+            ...userData,
+            ...apiData,
+            id: userId,
+          };
+
+          await AsyncStorage.setItem("userData", JSON.stringify(updatedData));
+          return updatedData;
+        }
+      } catch (apiError) {
+        console.log(
+          "API bağlantısı başarısız, localStorage verisi kullanılıyor"
+        );
+      }
+
+      // API'den veri alınamazsa localStorage verisini kullan
+      return userData;
     } catch (error) {
-      console.error("Kullanıcı bilgisi alma hatası:", error);
+      console.error("Get user error:", error);
       throw error;
     }
   },
@@ -85,60 +118,82 @@ export const userService = {
 export const bookService = {
   getAllBooks: async () => {
     try {
-      const cachedBooks = await AsyncStorage.getItem("cached_books");
-      if (cachedBooks) {
-        return JSON.parse(cachedBooks);
+      const url = `${BASE_URL}/api/kitaplar`;
+      console.log("API isteği yapılıyor:", url);
+
+      const response = await fetch(url, {
+        method: "GET",
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+        },
+      });
+
+      console.log("API yanıt status:", response.status);
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
-      return [];
+
+      const text = await response.text();
+      console.log("API ham yanıt:", text);
+
+      const data = JSON.parse(text);
+      console.log("İşlenmiş veri:", data);
+
+      if (data.success) {
+        return data;
+      } else {
+        throw new Error(data.error || "Veri alınamadı");
+      }
     } catch (error) {
-      console.error("Kitap listesi alma hatası:", error);
-      return [];
+      console.error("Kitapları getirme hatası:", error);
+      throw error;
     }
   },
 
   createBook: async (bookData) => {
     try {
-      // Önce mevcut kitapları al
-      let books = [];
-      try {
-        const cachedBooks = await AsyncStorage.getItem("cached_books");
-        if (cachedBooks) {
-          books = JSON.parse(cachedBooks);
-        }
-      } catch (e) {
-        console.log("Cache okuma hatası:", e);
+      console.log("Kitap ekleme isteği:", bookData);
+      const response = await fetch(`${BASE_URL}/api/kitap`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        body: JSON.stringify(bookData),
+      });
+
+      const text = await response.text();
+      console.log("API yanıtı:", text);
+
+      if (!response.ok) {
+        throw new Error(text || `HTTP error! status: ${response.status}`);
       }
 
-      // Yeni kitap verisi
-      const newBook = {
-        ...bookData,
-        id: Date.now().toString(),
-        created_at: new Date().toISOString(),
-      };
-
-      // Kitabı listeye ekle
-      books.unshift(newBook);
-
-      // Cache'i güncelle
-      await AsyncStorage.setItem("cached_books", JSON.stringify(books));
-
-      return newBook;
+      return JSON.parse(text);
     } catch (error) {
-      console.error("Kitap oluşturma hatası:", error);
+      console.error("Kitap ekleme hatası:", error);
       throw error;
     }
   },
 
   getBook: async (bookId) => {
     try {
-      const cachedBooks = await AsyncStorage.getItem("cached_books");
-      if (cachedBooks) {
-        const books = JSON.parse(cachedBooks);
-        return books.find((book) => book.id === bookId);
+      const response = await fetch(`${BASE_URL}/kitaplar/${bookId}`);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
-      return null;
+
+      const text = await response.text();
+      try {
+        return JSON.parse(text);
+      } catch (parseError) {
+        console.error("JSON Parse Error:", text);
+        throw new Error("Sunucu yanıtı geçersiz format içeriyor");
+      }
     } catch (error) {
-      console.error("Kitap detayı alma hatası:", error);
+      console.error("Get book error:", error);
       throw error;
     }
   },
@@ -152,18 +207,7 @@ export const bookService = {
         },
         body: JSON.stringify(bookData),
       });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const text = await response.text();
-      try {
-        return JSON.parse(text);
-      } catch (parseError) {
-        console.error("Raw API Response:", text);
-        throw new Error("Güncelleme yanıtı geçersiz");
-      }
+      return await response.json();
     } catch (error) {
       console.error("Update book error:", error);
       throw error;
@@ -172,39 +216,45 @@ export const bookService = {
 
   deleteBook: async (bookId) => {
     try {
-      const cachedBooks = await AsyncStorage.getItem("cached_books");
-      if (cachedBooks) {
-        const books = JSON.parse(cachedBooks);
-        const updatedBooks = books.filter((book) => book.id !== bookId);
-        await AsyncStorage.setItem(
-          "cached_books",
-          JSON.stringify(updatedBooks)
-        );
-      }
-      return { success: true };
+      const response = await fetch(`${BASE_URL}/kitaplar/${bookId}`, {
+        method: "DELETE",
+      });
+      return await response.json();
     } catch (error) {
-      console.error("Kitap silme hatası:", error);
+      console.error("Delete book error:", error);
       throw error;
     }
   },
 
   getBooksByCategory: async (category) => {
     try {
-      const response = await fetch(`${BASE_URL}/kitaplar/kategori/${category}`);
-      return await response.json();
+      const response = await fetch(
+        `${BASE_URL}/api/kitaplar/kategori/${category}`
+      );
+      if (!response.ok) {
+        throw new Error("Veriler alınamadı");
+      }
+      const data = await response.json();
+      return data;
     } catch (error) {
       console.error("Get books by category error:", error);
-      throw error;
+      return [];
     }
   },
 
   getBooksByFaculty: async (faculty) => {
     try {
-      const response = await fetch(`${BASE_URL}/kitaplar/fakulte/${faculty}`);
-      return await response.json();
+      const response = await fetch(
+        `${BASE_URL}/api/kitaplar/fakulte/${faculty}`
+      );
+      if (!response.ok) {
+        throw new Error("Veriler alınamadı");
+      }
+      const data = await response.json();
+      return data;
     } catch (error) {
       console.error("Get books by faculty error:", error);
-      throw error;
+      return [];
     }
   },
 };
