@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
-import { NavigationContainer } from '@react-navigation/native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import Navigator from './Navigator';
+import React, { useState, useEffect } from "react";
+import { NavigationContainer } from "@react-navigation/native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import Navigator from "./Navigator";
 import OnboardingScreens from "./screens/onBoardingScren/onBoarding";
 import LoginScreen from "./screens/LoginScreen/LoginScren";
+import { Alert } from "react-native";
 
 export default function App() {
   const [showOnboarding, setShowOnboarding] = useState(true);
@@ -17,19 +18,19 @@ export default function App() {
   const checkFirstTime = async () => {
     try {
       const [hasLaunched, userLoggedIn] = await Promise.all([
-        AsyncStorage.getItem('hasLaunched'),
-        AsyncStorage.getItem('userLoggedIn')
+        AsyncStorage.getItem("hasLaunched"),
+        AsyncStorage.getItem("userLoggedIn"),
       ]);
 
-      if (hasLaunched === 'true') {
+      if (hasLaunched === "true") {
         setShowOnboarding(false);
       }
 
-      if (userLoggedIn === 'true') {
+      if (userLoggedIn === "true") {
         setIsLoggedIn(true);
       }
     } catch (error) {
-      console.error('Error checking first time:', error);
+      console.error("Error checking first time:", error);
     } finally {
       setIsLoading(false);
     }
@@ -37,32 +38,34 @@ export default function App() {
 
   const handleDone = async () => {
     try {
-      await AsyncStorage.setItem('hasLaunched', 'true');
+      await AsyncStorage.setItem("hasLaunched", "true");
       setShowOnboarding(false);
     } catch (error) {
-      console.error('Error saving onboarding status:', error);
+      console.error("Error saving onboarding status:", error);
     }
   };
 
   const handleLogin = async () => {
     try {
-      await AsyncStorage.setItem('userLoggedIn', 'true');
       setIsLoggedIn(true);
+      console.log("Kullanıcı başarıyla giriş yaptı");
     } catch (error) {
-      console.error('Error saving login status:', error);
+      console.error("Login hatası:", error);
+      Alert.alert("Hata", "Giriş yapılırken bir hata oluştu");
+      setIsLoggedIn(false);
     }
   };
 
   const clearOldCache = async () => {
     try {
-      const lastCleanup = await AsyncStorage.getItem('last_cache_cleanup');
+      const lastCleanup = await AsyncStorage.getItem("last_cache_cleanup");
       const now = Date.now();
 
       // Cache temizliğini 3 günde bir yap (24 saatten 72 saate çıkarıldı)
       if (!lastCleanup || now - parseInt(lastCleanup) > 72 * 60 * 60 * 1000) {
-        await AsyncStorage.setItem('last_cache_cleanup', now.toString());
+        await AsyncStorage.setItem("last_cache_cleanup", now.toString());
         // Eski cache'leri temizle
-        const keys = ['cached_meals', 'cached_messages', 'cached_books'];
+        const keys = ["cached_meals", "cached_messages", "cached_books"];
         for (const key of keys) {
           const lastUpdate = await AsyncStorage.getItem(`${key}_last_update`);
           // 3 günden eski cache'leri temizle
@@ -73,7 +76,7 @@ export default function App() {
         }
       }
     } catch (error) {
-      console.error('Error cleaning cache:', error);
+      console.error("Error cleaning cache:", error);
     }
   };
 
