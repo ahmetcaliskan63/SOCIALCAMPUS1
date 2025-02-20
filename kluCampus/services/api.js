@@ -155,6 +155,7 @@ export const bookService = {
   createBook: async (bookData) => {
     try {
       console.log("Kitap ekleme isteği:", bookData);
+
       const response = await fetch(`${BASE_URL}/api/kitap`, {
         method: "POST",
         headers: {
@@ -167,11 +168,13 @@ export const bookService = {
       const text = await response.text();
       console.log("API yanıtı:", text);
 
+      const data = JSON.parse(text);
+
       if (!response.ok) {
-        throw new Error(text || `HTTP error! status: ${response.status}`);
+        throw new Error(JSON.stringify(data));
       }
 
-      return JSON.parse(text);
+      return data;
     } catch (error) {
       console.error("Kitap ekleme hatası:", error);
       throw error;

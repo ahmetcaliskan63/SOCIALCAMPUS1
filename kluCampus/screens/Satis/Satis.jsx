@@ -109,102 +109,77 @@ export default function BookSellingPage() {
 
   const uploadToImgur = async (uri) => {
     try {
-      const formData = new FormData();
-      const filename = uri.split('/').pop();
-      const match = /\.(\w+)$/.exec(filename);
-      const type = match ? `image/${match[1]}` : `image`;
-      
-      formData.append('image', {
-        uri: uri,
-        name: filename,
-        type
-      });
+      // Resim dosyasını oku
+      const response = await fetch(uri);
+      const blob = await response.blob();
 
-      const response = await fetch('https://api.imgur.com/3/image', {
+      // FormData oluştur
+      const formData = new FormData();
+      formData.append('image', blob);
+
+      // Imgur API'ye gönder
+      const imgurResponse = await fetch('https://api.imgur.com/3/image', {
         method: 'POST',
         headers: {
-          Authorization: `Client-ID ${IMGUR_CLIENT_ID}`,
+          'Authorization': `Client-ID ${IMGUR_CLIENT_ID}`,
         },
         body: formData
       });
 
-      const data = await response.json();
-      if (data.success) {
-        return data.data.link;
-      } else {
+      const imgurData = await imgurResponse.json();
+      if (!imgurData.success) {
         throw new Error('Imgur upload failed');
       }
+
+      return imgurData.data.link;
     } catch (error) {
-      console.error('Image upload error:', error);
+      console.error('Resim yükleme hatası:', error);
       throw error;
     }
   };
 
-  const saveBook = async () => {
-    if (!isSaveButtonEnabled) return;
-
+  const handleSave = async () => {
     try {
       setLoading(true);
       
+      // Kullanıcı verilerini al
       const userData = await getCurrentUser();
-      console.log('Kullanıcı bilgileri:', userData);
-      
       if (!userData) {
-        Alert.alert('Hata', 'Kullanıcı bilgileri alınamadı.');
-        return;
+        throw new Error("Kullanıcı bilgileri alınamadı");
       }
 
-      if (!newBook.photoUri) {
-        Alert.alert('Hata', 'Lütfen bir Ürün resmi seçin.');
-        return;
-      }
-
-      // Resmi Imgur'a yükle
+      // Önce resmi Imgur'a yükle
       console.log('Resim yükleniyor...');
       const imageUrl = await uploadToImgur(newBook.photoUri);
       console.log('Resim yüklendi:', imageUrl);
 
-      // Kitap bilgilerini kaydet
       const bookData = {
-        baslik: newBook.name.trim(),
-        kategori: newBook.section.trim(),
+        baslik: newBook.name,
+        kategori: newBook.section,
         fiyat: Number(newBook.price),
-        instagram: newBook.instagram.trim(),
-        resim_url: imageUrl,
+        instagram: newBook.instagram,
+        resim_url: imageUrl, // Yerel dosya yolu yerine Imgur URL'sini kullan
         satici_id: userData.id,
         satici_adi: userData.tam_ad,
         satici_fakulte: userData.fakulte,
-        satici_bolum: userData.bolum
+        satici_bolum: userData.bolum,
       };
 
-      console.log('Gönderilecek kitap verisi:', bookData);
+      console.log("Gönderilecek kitap verisi:", bookData);
 
       const result = await bookService.createBook(bookData);
-      console.log('API yanıt:', result);
-
+      
       if (result.success) {
-        // Cache'i güncelle
-        const cachedData = await AsyncStorage.getItem('booksCache');
-        if (cachedData) {
-          const booksData = JSON.parse(cachedData);
-          booksData.unshift(result.data);
-          await AsyncStorage.setItem('booksCache', JSON.stringify(booksData));
-          await AsyncStorage.setItem('books_cache_timestamp', Date.now().toString());
-          
-          setBooks(booksData);
-          setFilteredBooks(booksData);
-        }
-
-        Alert.alert('Başarılı', 'Ürün başarıyla eklendi!');
+        setModalVisible(false);
         setNewBook({ name: '', section: '', price: '', instagram: '', photoUri: '' });
-        closeModal();
+        fetchBooks(); // Kitap listesini yenile
+        Alert.alert("Başarılı", "Ürün başarıyla eklendi!");
       } else {
-        throw new Error(result.message || 'Ürün kaydedilemedi');
+        throw new Error(result.error || "Kitap eklenemedi");
       }
     } catch (error) {
-      console.error('Ürün kaydedilirken hata:', error);
-      console.error('Hata detayı:', error.message);
-      Alert.alert('Hata', 'Ürün kaydedilirken bir hata oluştu: ' + error.message);
+      console.error("Ürün kaydedilirken hata:", error);
+      Alert.alert("Hata", "Ürün kaydedilirken bir hata oluştu");
     } finally {
       setLoading(false);
     }
@@ -500,7 +475,7 @@ export default function BookSellingPage() {
                     styles.saveButton,
                     { opacity: isSaveButtonEnabled ? 1 : 0.5 }
                   ]}
-                  onPress={saveBook}
+                  onPress={handleSave}
                   disabled={!isSaveButtonEnabled}
                 >
                   <Text style={styles.saveButtonText}>Kaydet</Text>

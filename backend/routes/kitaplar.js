@@ -49,22 +49,26 @@ router.get("/kitaplar", async (req, res) => {
 router.post("/kitap", async (req, res) => {
   try {
     console.log("Gelen kitap verisi:", req.body);
-    const {
-      baslik,
-      yazar,
-      aciklama,
-      fiyat,
-      fakulte,
-      kategori,
-      kullanici_id,
-      instagram,
-      resim_url,
-    } = req.body;
+
+    // Frontend'den gelen veriyi backend formatına dönüştür
+    const kitapData = {
+      baslik: req.body.baslik,
+      yazar: req.body.yazar || "Belirtilmemiş",
+      aciklama: req.body.aciklama || req.body.baslik,
+      fiyat: Number(req.body.fiyat),
+      fakulte: req.body.satici_fakulte?.toLowerCase() || "genel",
+      kategori: req.body.kategori?.toLowerCase() || "diger",
+      kullanici_id: req.body.satici_id?.toString(), // satici_id'yi kullanici_id olarak kullan
+      instagram: req.body.instagram || "",
+      resim_url: req.body.resim_url || "",
+    };
 
     // Veri doğrulama
-    if (!baslik || !fiyat || !kullanici_id) {
+    if (!kitapData.baslik || !kitapData.fiyat || !kitapData.kullanici_id) {
       return res.status(400).json({
+        success: false,
         error: "Gerekli alanlar eksik",
+        required: ["baslik", "fiyat", "satici_id"],
         received: req.body,
       });
     }
@@ -75,15 +79,15 @@ router.post("/kitap", async (req, res) => {
        (baslik, yazar, aciklama, fiyat, fakulte, kategori, kullanici_id, instagram, resim_url) 
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
-        baslik,
-        yazar || "Belirtilmemiş",
-        aciklama || baslik,
-        Number(fiyat),
-        fakulte?.toLowerCase() || "genel",
-        kategori?.toLowerCase() || "diger",
-        kullanici_id.toString(), // ID'yi string'e çevir
-        instagram || "",
-        resim_url || "",
+        kitapData.baslik,
+        kitapData.yazar,
+        kitapData.aciklama,
+        kitapData.fiyat,
+        kitapData.fakulte,
+        kitapData.kategori,
+        kitapData.kullanici_id,
+        kitapData.instagram,
+        kitapData.resim_url,
       ]
     );
 
@@ -92,9 +96,18 @@ router.post("/kitap", async (req, res) => {
       result.insertId,
     ]);
 
+    // Yanıta satıcı bilgilerini ekle
+    const kitapWithSeller = {
+      ...kitap[0],
+      satici_adi: req.body.satici_adi,
+      satici_fakulte: req.body.satici_fakulte,
+      satici_bolum: req.body.satici_bolum,
+    };
+
     res.status(201).json({
       success: true,
-      data: kitap[0],
+      data: kitapWithSeller,
+      message: "Kitap başarıyla eklendi",
     });
   } catch (error) {
     console.error("Kitap ekleme hatası:", error);
