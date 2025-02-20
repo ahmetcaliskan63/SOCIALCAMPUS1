@@ -219,10 +219,22 @@ export const bookService = {
 
   deleteBook: async (bookId) => {
     try {
-      const response = await fetch(`${BASE_URL}/kitaplar/${bookId}`, {
+      console.log("Silinecek kitap ID:", bookId);
+
+      const response = await fetch(`${BASE_URL}/api/kitap/${bookId}`, {
         method: "DELETE",
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+        },
       });
-      return await response.json();
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      return data;
     } catch (error) {
       console.error("Delete book error:", error);
       throw error;

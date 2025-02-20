@@ -28,8 +28,21 @@ export default function BookSellingPage() {
   const [isSaveButtonEnabled, setIsSaveButtonEnabled] = useState(false);
 
   useEffect(() => {
-    fetchBooks();
+    const getCurrentUser = async () => {
+      try {
+        const userDataStr = await AsyncStorage.getItem('userData');
+        if (userDataStr) {
+          const userData = JSON.parse(userDataStr);
+          console.log('Kullanıcı verisi:', userData);
+          setCurrentUserId(userData.id?.toString());
+        }
+      } catch (error) {
+        console.error('Kullanıcı verisi alınırken hata:', error);
+      }
+    };
+
     getCurrentUser();
+    fetchBooks();
   }, []);
 
   useEffect(() => {
@@ -88,22 +101,6 @@ export default function BookSellingPage() {
       }
     } finally {
       setLoading(false);
-    }
-  };
-
-  const getCurrentUser = async () => {
-    try {
-      const userDataStr = await AsyncStorage.getItem('userData');
-      if (!userDataStr) {
-        console.error('Kullanıcı verisi bulunamadı');
-        return;
-      }
-
-      const userData = JSON.parse(userDataStr);
-      setCurrentUserId(userData.id);
-      return userData; // Kullanıcı verisini döndür
-    } catch (error) {
-      console.error('Kullanıcı bilgisi alınırken hata:', error);
     }
   };
 
@@ -246,7 +243,14 @@ export default function BookSellingPage() {
   };
 
   const renderBookItem = ({ item }) => {
-    const isOwnBook = item.satici_id === currentUserId;
+    // Debug için log ekleyelim
+    console.log('Kitap verisi:', item);
+    console.log('Mevcut kullanıcı ID:', currentUserId);
+    console.log('Satıcı ID:', item.kullanici_id);
+    
+    // ID'leri string'e çevirerek karşılaştır
+    const isOwner = item.kullanici_id?.toString() === currentUserId?.toString();
+    console.log('Is owner?', isOwner);
 
     return (
       <View style={styles.bookCard}>
@@ -262,7 +266,8 @@ export default function BookSellingPage() {
         <View style={styles.bookInfo}>
           <View style={styles.titleContainer}>
             <Text style={styles.bookTitle} numberOfLines={2}>{item.baslik}</Text>
-            {isOwnBook && (
+            {/* Silme butonu sadece kitap sahibine gösterilir */}
+            {isOwner && (
               <TouchableOpacity 
                 style={styles.deleteButton}
                 onPress={() => handleDeleteBook(item.id)}

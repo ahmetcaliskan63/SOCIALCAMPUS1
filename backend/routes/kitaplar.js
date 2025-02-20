@@ -146,4 +146,48 @@ router.get("/kitaplar/fakulte/:fakulte", async (req, res) => {
   }
 });
 
+// Kitap silme route'u - route yolunu düzelttik
+router.delete("/kitap/:id", async (req, res) => {
+  // "/kitaplar/:id" yerine "/kitap/:id"
+  try {
+    console.log("Silinecek kitap ID:", req.params.id);
+
+    // Önce kitabın var olduğunu kontrol et
+    const [kitap] = await db.execute("SELECT * FROM kitaplar WHERE id = ?", [
+      req.params.id,
+    ]);
+
+    if (kitap.length === 0) {
+      return res.status(404).json({
+        success: false,
+        error: "Kitap bulunamadı",
+      });
+    }
+
+    // Kitabı sil
+    const [result] = await db.execute("DELETE FROM kitaplar WHERE id = ?", [
+      req.params.id,
+    ]);
+
+    if (result.affectedRows > 0) {
+      res.json({
+        success: true,
+        message: "Kitap başarıyla silindi",
+      });
+    } else {
+      res.status(500).json({
+        success: false,
+        error: "Kitap silinemedi",
+      });
+    }
+  } catch (error) {
+    console.error("Kitap silme hatası:", error);
+    res.status(500).json({
+      success: false,
+      error: "Kitap silinirken bir hata oluştu",
+      details: error.message,
+    });
+  }
+});
+
 module.exports = router;
