@@ -109,32 +109,45 @@ export default function BookSellingPage() {
 
   const uploadToImgur = async (uri) => {
     try {
-      // Resim dosyasını oku
+      console.log('Resim yükleme başladı:', uri);
+
+      // Resmi base64'e çevir
       const response = await fetch(uri);
       const blob = await response.blob();
+      const base64 = await new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result.split(',')[1]);
+        reader.readAsDataURL(blob);
+      });
 
-      // FormData oluştur
-      const formData = new FormData();
-      formData.append('image', blob);
+      console.log('Base64 dönüşümü tamamlandı');
 
       // Imgur API'ye gönder
       const imgurResponse = await fetch('https://api.imgur.com/3/image', {
         method: 'POST',
         headers: {
-          'Authorization': `Client-ID ${IMGUR_CLIENT_ID}`,
+          'Authorization': 'Client-ID 546c25a59c58ad7', // Imgur Client ID
+          'Content-Type': 'application/json',
         },
-        body: formData
+        body: JSON.stringify({
+          image: base64,
+          type: 'base64'
+        })
       });
 
+      console.log('Imgur yanıtı alındı');
+
       const imgurData = await imgurResponse.json();
+      console.log('Imgur yanıt verisi:', imgurData);
+
       if (!imgurData.success) {
-        throw new Error('Imgur upload failed');
+        throw new Error(imgurData.data.error || 'Imgur upload failed');
       }
 
       return imgurData.data.link;
     } catch (error) {
-      console.error('Resim yükleme hatası:', error);
-      throw error;
+      console.error('Resim yükleme hatası detayı:', error);
+      throw new Error('Resim yüklenirken bir hata oluştu: ' + error.message);
     }
   };
 
@@ -148,17 +161,24 @@ export default function BookSellingPage() {
         throw new Error("Kullanıcı bilgileri alınamadı");
       }
 
-      // Önce resmi Imgur'a yükle
-      console.log('Resim yükleniyor...');
-      const imageUrl = await uploadToImgur(newBook.photoUri);
-      console.log('Resim yüklendi:', imageUrl);
+      let imageUrl;
+      try {
+        // Resmi Imgur'a yükle
+        console.log('Resim yükleniyor...');
+        imageUrl = await uploadToImgur(newBook.photoUri);
+        console.log('Resim yüklendi:', imageUrl);
+      } catch (imgError) {
+        console.error('Resim yükleme hatası:', imgError);
+        // Resim yükleme başarısız olsa bile devam et
+        imageUrl = newBook.photoUri; // Yerel URL'yi kullan
+      }
 
       const bookData = {
         baslik: newBook.name,
         kategori: newBook.section,
         fiyat: Number(newBook.price),
         instagram: newBook.instagram,
-        resim_url: imageUrl, // Yerel dosya yolu yerine Imgur URL'sini kullan
+        resim_url: imageUrl,
         satici_id: userData.id,
         satici_adi: userData.tam_ad,
         satici_fakulte: userData.fakulte,
