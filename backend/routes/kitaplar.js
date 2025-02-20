@@ -2,6 +2,12 @@ const express = require("express");
 const router = express.Router();
 const db = require("../config/db");
 
+// Debug için route'ları logla
+router.use((req, res, next) => {
+  console.log(`${req.method} ${req.originalUrl}`);
+  next();
+});
+
 // Route'ları logla
 console.log("Kitaplar route'ları yüklendi");
 console.log("GET /api/kitaplar");
@@ -14,19 +20,15 @@ router.get("/kitaplar", async (req, res) => {
   try {
     // Veritabanı bağlantısını kontrol et
     await db.execute("SELECT 1");
+    console.log("Veritabanı bağlantısı OK");
 
-    // Kitapları getir
+    // Kitapları getir - JOIN olmadan
     const [kitaplar] = await db.execute(`
-      SELECT k.*, 
-             u.tam_ad as satici_adi, 
-             u.fakulte as satici_fakulte, 
-             u.bolum as satici_bolum
-      FROM kitaplar k
-      LEFT JOIN kullanicilar u ON k.kullanici_id = u.id
-      ORDER BY k.created_at DESC
+      SELECT * FROM kitaplar 
+      ORDER BY created_at DESC
     `);
 
-    console.log("Bulunan kitap sayısı:", kitaplar.length);
+    console.log("Sorgu başarılı, kitap sayısı:", kitaplar.length);
 
     res.json({
       success: true,
@@ -60,7 +62,7 @@ router.post("/kitap", async (req, res) => {
     } = req.body;
 
     // Veri doğrulama
-    if (!baslik || !fiyat || !kullanici_id || !instagram || !resim_url) {
+    if (!baslik || !fiyat || !kullanici_id) {
       return res.status(400).json({
         error: "Gerekli alanlar eksik",
         received: req.body,
@@ -79,32 +81,25 @@ router.post("/kitap", async (req, res) => {
         Number(fiyat),
         fakulte?.toLowerCase() || "genel",
         kategori?.toLowerCase() || "diger",
-        kullanici_id,
-        instagram,
-        resim_url,
+        kullanici_id.toString(), // ID'yi string'e çevir
+        instagram || "",
+        resim_url || "",
       ]
     );
 
-    console.log("Kitap eklendi, ID:", result.insertId);
-
     // Eklenen kitabı getir
-    const [kitap] = await db.execute(
-      `
-      SELECT k.*, 
-             u.tam_ad as satici_adi, 
-             u.fakulte as satici_fakulte, 
-             u.bolum as satici_bolum
-      FROM kitaplar k
-      LEFT JOIN kullanicilar u ON k.kullanici_id = u.id
-      WHERE k.id = ?
-    `,
-      [result.insertId]
-    );
+    const [kitap] = await db.execute("SELECT * FROM kitaplar WHERE id = ?", [
+      result.insertId,
+    ]);
 
-    res.status(201).json(kitap[0]);
+    res.status(201).json({
+      success: true,
+      data: kitap[0],
+    });
   } catch (error) {
     console.error("Kitap ekleme hatası:", error);
     res.status(500).json({
+      success: false,
       error: "Kitap eklenirken bir hata oluştu",
       details: error.message,
     });

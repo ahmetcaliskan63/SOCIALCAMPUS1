@@ -14,6 +14,12 @@ app.use(
 
 app.use(express.json());
 
+// Debug için tüm gelen istekleri logla
+app.use((req, res, next) => {
+  console.log(`${req.method} ${req.url}`);
+  next();
+});
+
 // API durumunu kontrol et
 app.get("/", (req, res) => {
   res.json({ status: "API is running" });
