@@ -53,14 +53,14 @@ router.post("/kitap", async (req, res) => {
     // Frontend'den gelen veriyi backend formatına dönüştür
     const kitapData = {
       baslik: req.body.baslik,
-      yazar: req.body.yazar || "Belirtilmemiş",
-      aciklama: req.body.aciklama || req.body.baslik,
-      fiyat: Number(req.body.fiyat),
-      fakulte: req.body.satici_fakulte?.toLowerCase() || "genel",
       kategori: req.body.kategori?.toLowerCase() || "diger",
-      kullanici_id: req.body.satici_id?.toString(), // satici_id'yi kullanici_id olarak kullan
+      fiyat: Number(req.body.fiyat),
       instagram: req.body.instagram || "",
       resim_url: req.body.resim_url || "",
+      kullanici_id: req.body.satici_id?.toString(),
+      satici_adi: req.body.satici_adi || "",
+      satici_fakulte: req.body.satici_fakulte?.toLowerCase() || "",
+      satici_bolum: req.body.satici_bolum || "",
     };
 
     // Veri doğrulama
@@ -73,40 +73,39 @@ router.post("/kitap", async (req, res) => {
       });
     }
 
+    // SQL sorgusunu hazırla
+    const sql = `
+      INSERT INTO kitaplar 
+      (baslik, kategori, fiyat, instagram, resim_url, kullanici_id, satici_adi, satici_fakulte, satici_bolum) 
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `;
+
+    const values = [
+      kitapData.baslik,
+      kitapData.kategori,
+      kitapData.fiyat,
+      kitapData.instagram,
+      kitapData.resim_url,
+      kitapData.kullanici_id,
+      kitapData.satici_adi,
+      kitapData.satici_fakulte,
+      kitapData.satici_bolum,
+    ];
+
+    console.log("SQL:", sql);
+    console.log("Values:", values);
+
     // Veritabanına kaydet
-    const [result] = await db.execute(
-      `INSERT INTO kitaplar 
-       (baslik, yazar, aciklama, fiyat, fakulte, kategori, kullanici_id, instagram, resim_url) 
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [
-        kitapData.baslik,
-        kitapData.yazar,
-        kitapData.aciklama,
-        kitapData.fiyat,
-        kitapData.fakulte,
-        kitapData.kategori,
-        kitapData.kullanici_id,
-        kitapData.instagram,
-        kitapData.resim_url,
-      ]
-    );
+    const [result] = await db.execute(sql, values);
 
     // Eklenen kitabı getir
     const [kitap] = await db.execute("SELECT * FROM kitaplar WHERE id = ?", [
       result.insertId,
     ]);
 
-    // Yanıta satıcı bilgilerini ekle
-    const kitapWithSeller = {
-      ...kitap[0],
-      satici_adi: req.body.satici_adi,
-      satici_fakulte: req.body.satici_fakulte,
-      satici_bolum: req.body.satici_bolum,
-    };
-
     res.status(201).json({
       success: true,
-      data: kitapWithSeller,
+      data: kitap[0],
       message: "Kitap başarıyla eklendi",
     });
   } catch (error) {
