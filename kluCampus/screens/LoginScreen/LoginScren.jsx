@@ -108,13 +108,13 @@ export default function LoginScreen({ onLogin }) {
             const response = await userService.createUser(requestData);
             console.log('API yanıtı:', response);
             
-            // Başarılı yanıt kontrolü
-            if (response && response.id) {
+            // Başarılı yanıt kontrolü - response.data yerine response'un kendisini kontrol ediyoruz
+            if (response && response.success && response.data) {
                 const userData = {
-                    id: response.id.toString(),
-                    tam_ad: response.tam_ad,
-                    fakulte: response.fakulte,
-                    bolum: response.bolum
+                    id: response.data.id.toString(),
+                    tam_ad: response.data.tam_ad,
+                    fakulte: response.data.fakulte,
+                    bolum: response.data.bolum
                 };
                 
                 try {

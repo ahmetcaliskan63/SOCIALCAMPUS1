@@ -3,6 +3,8 @@ function handleApiResponse(response) {
     // Yanıt zaten bir obje ise, JSON.parse kullanmaya gerek yok
     const data = typeof response === "string" ? JSON.parse(response) : response;
 
+    console.log("API yanıtı:", data); // Yanıtı konsola yazdır
+
     if (data.success) {
       // Başarılı yanıt işleme
       if (!data.data) {
