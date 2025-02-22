@@ -27,22 +27,28 @@ export default function BookSellingPage() {
   const slideAnim = useRef(new Animated.Value(100)).current;
   const [isSaveButtonEnabled, setIsSaveButtonEnabled] = useState(false);
 
-  useEffect(() => {
-    const getCurrentUser = async () => {
-      try {
-        const userDataStr = await AsyncStorage.getItem('userData');
-        if (userDataStr) {
-          const userData = JSON.parse(userDataStr);
-          console.log('Kullanıcı verisi:', userData);
-          setCurrentUserId(userData.id?.toString());
-        }
-      } catch (error) {
-        console.error('Kullanıcı verisi alınırken hata:', error);
+  // getCurrentUser fonksiyonunu useEffect dışına çıkaralım
+  const getCurrentUser = async () => {
+    try {
+      const userDataStr = await AsyncStorage.getItem('userData');
+      if (userDataStr) {
+        const userData = JSON.parse(userDataStr);
+        console.log('Kullanıcı verisi:', userData);
+        setCurrentUserId(userData.id?.toString());
+        return userData;
       }
+    } catch (error) {
+      console.error('Kullanıcı verisi alınırken hata:', error);
+    }
+  };
+
+  useEffect(() => {
+    const initializeData = async () => {
+      await getCurrentUser();
+      await fetchBooks();
     };
 
-    getCurrentUser();
-    fetchBooks();
+    initializeData();
   }, []);
 
   useEffect(() => {
@@ -150,14 +156,14 @@ export default function BookSellingPage() {
 
   const handleSave = async () => {
     try {
-      setLoading(true);
-      
-      // Kullanıcı verilerini al
       const userData = await getCurrentUser();
       if (!userData) {
-        throw new Error("Kullanıcı bilgileri alınamadı");
+        Alert.alert('Hata', 'Kullanıcı bilgileri alınamadı');
+        return;
       }
 
+      setLoading(true);
+      
       let imageUrl;
       try {
         // Resmi Imgur'a yükle
@@ -195,8 +201,8 @@ export default function BookSellingPage() {
         throw new Error(result.error || "Kitap eklenemedi");
       }
     } catch (error) {
-      console.error("Ürün kaydedilirken hata:", error);
-      Alert.alert("Hata", "Ürün kaydedilirken bir hata oluştu");
+      console.error('Ürün kaydedilirken hata:', error);
+      Alert.alert('Hata', 'Ürün kaydedilemedi: ' + error.message);
     } finally {
       setLoading(false);
     }
